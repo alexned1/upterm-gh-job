@@ -1,0 +1,26 @@
+upterm_connect:
+  name: Upterm connect
+  runs-on: ubuntu-latest
+  steps:
+    - name: Upterm connect
+      shell: bash
+      run: |
+        mkdir $HOME/.ssh
+        echo "@cert-authority uptermd.upterm.dev,37.16.25.99 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiecex8Dq718eSe1CCLgLvDmI7AagvCtax7brPFWkh4" >> ~/.ssh/known_hosts
+        ssh-keygen -b 2048 -t rsa -f $HOME/.ssh/id_rsa -q -N ""
+        
+        sudo apt update
+        sudo apt-get install -y tmux
+        curl -SL https://github.com/owenthereal/upterm/releases/download/v0.10.0/upterm_linux_amd64.tar.gz | tar zxvf - -C /tmp upterm && sudo install /tmp/upterm /usr/local/bin/
+
+        tmux new -d -s upterm-wrapper -x 132 -y 43 "upterm host -- bash"
+        sleep 2
+        tmux send-keys -t upterm-wrapper q C-m
+        tmux set -t upterm-wrapper window-size largest; tmux set -t upterm window-size largest
+        sleep 1
+
+        while true
+        do
+          sleep 2
+          upterm session current --admin-socket ~/.upterm/*.sock
+        done
