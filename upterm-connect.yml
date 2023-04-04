@@ -6,7 +6,21 @@ upterm_connect:
       shell: bash
       run: |
         mkdir $HOME/.ssh
-        echo "@cert-authority uptermd.upterm.dev,37.16.25.99 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICiecex8Dq718eSe1CCLgLvDmI7AagvCtax7brPFWkh4" >> ~/.ssh/known_hosts
+
+        cat <<EOT >> $HOME/.ssh/config
+        Host uptermd.upterm.dev
+          StrictHostKeyChecking no
+          CheckHostIP no
+          TCPKeepAlive yes
+          ServerAliveInterval 30
+          ServerAliveCountMax 180
+          VerifyHostKeyDNS yes
+          UpdateHostKeys yes
+        EOT
+        chmod 400 $HOME/.ssh/config
+
+        ssh -i $HOME/.ssh/id_rsa uptermd.upterm.dev || true
+        cat <(cat $HOME/.ssh/known_hosts | awk '{ print "@cert-authority * " $2 " " $3 }') >> $HOME/.ssh/known_hosts
         ssh-keygen -b 2048 -t rsa -f $HOME/.ssh/id_rsa -q -N ""
         
         sudo apt update
