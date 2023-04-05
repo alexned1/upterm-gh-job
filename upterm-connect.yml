@@ -7,6 +7,7 @@ upterm_connect:
       run: |
         mkdir $HOME/.ssh
 
+        # Setup SSH config
         cat <<EOT >> $HOME/.ssh/config
         Host uptermd.upterm.dev
           StrictHostKeyChecking no
@@ -19,20 +20,26 @@ upterm_connect:
         EOT
         chmod 400 $HOME/.ssh/config
 
+        # Add upterm to known hosts and generate RSA key pair
         ssh -i $HOME/.ssh/id_rsa uptermd.upterm.dev || true
         cat <(cat $HOME/.ssh/known_hosts | awk '{ print "@cert-authority * " $2 " " $3 }') >> $HOME/.ssh/known_hosts
         ssh-keygen -b 2048 -t rsa -f $HOME/.ssh/id_rsa -q -N ""
         
+        # Install tmux and upterm
         sudo apt update
         sudo apt-get install -y tmux
         curl -SL https://github.com/owenthereal/upterm/releases/download/v0.10.0/upterm_linux_amd64.tar.gz | tar zxvf - -C /tmp upterm && sudo install /tmp/upterm /usr/local/bin/
 
+        # Run upterm
         tmux new -d -s upterm-wrapper -x 132 -y 43 "upterm host -- bash"
         sleep 2
         tmux send-keys -t upterm-wrapper q C-m
         tmux set -t upterm-wrapper window-size largest; tmux set -t upterm window-size largest
         sleep 1
 
+        # Print the session info continuously, because of Github's current issue 
+        # with the way of outputing the logs
+        # https://github.com/actions/runner/issues/886#issuecomment-762982181
         while true
         do
           sleep 2
